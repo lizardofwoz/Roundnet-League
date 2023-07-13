@@ -2,16 +2,29 @@ function go() {
     let net1 = document.getElementById("net1").value;
     let net2 = document.getElementById("net2").value;
     let net3 = document.getElementById("net3").value;
+    let prev1 = document.getElementById("prev1").value;
+    let prev2 = document.getElementById("prev2").value;
+    let prev3 = document.getElementById("prev3").value;
     let matchUpSub = document.getElementById("sub").value;
     document.getElementById("results").innerHTML = "";
-    if (!valid(net1, net2, net3, sub)) {
+    if (!isValid(net1, net2, net3, prev1, prev2, prev3, matchUpSub)) {
         console.log("Error");
         return;
     }
     let [hash, order] = getHashAndOrder(net1, net2, net3);
     console.log(hash);
     console.log(order);
-    let res = getAllMatchups(hash, order, matchUpSub);
+    let badPairs = [];
+    if (prev1.length === 2) {
+        badPairs.push(sortPair(prev1));
+    }
+    if (prev2.length === 2) {
+        badPairs.push(sortPair(prev2));
+    }
+    if (prev3.length === 2) {
+        badPairs.push(sortPair(prev3));
+    }
+    let res = getAllMatchups(hash, order, matchUpSub, badPairs);
     for (r of res) {
         let node = document.createElement("li");
         let text = document.createTextNode(r);
@@ -25,14 +38,7 @@ function getHashAndOrder(net1, net2, net3) {
     let nets = [net1, net2, net3];
     let sorted = [];
     for (let idx in nets) {
-        let a = parseInt(nets[idx].charAt(0));
-        let b = parseInt(nets[idx].charAt(1));
-        if (a < b) {
-            sorted.push(""+a+b+idx);
-        }
-        else {
-            sorted.push(""+b+a+idx);
-        }
+        sorted.push(sortPair(nets[idx]) + idx); // Include index to determine order
     }
     sorted.sort();
     let hash = sorted[0].substring(0, 2) + sorted[1].substring(0, 2) + sorted[2].substring(0, 2);
@@ -43,15 +49,18 @@ function getHashAndOrder(net1, net2, net3) {
     return [hash, order];
 }
 
-function valid(net1, net2, net3, sub) {
-    if (net1.length !== 2 || net2.length !== 2 || net3.length !== 2 || sub.length > 1) {
+function isValid(net1, net2, net3, prev1, prev2, prev3, sub) {
+    if (!isValidLength(net1, 2) || !isValidLength(net2, 2) || !isValidLength(net3, 2)) {
         return false;
     }
-    if (!isNumeric(net1) || !isNumeric(net2) || !isNumeric(net3) || (sub.length === 1 && !isNumeric(sub))) {
+    if (!isValidLength(prev1, 2, true) || !isValidLength(prev2, 2, true) || !isValidLength(prev3, 2, true)) {
+        return false;
+    }
+    if (!isValidLength(sub, 1, true)) {
         return false;
     }
     if (sub.length === 1) {
-        if (!isNumeric(sub) || parseInt(sub) < 1 || parseInt(sub) > 7) {
+        if (parseInt(sub) < 1 || parseInt(sub) > 7) {
             return false;
         }
     }
@@ -69,11 +78,31 @@ function valid(net1, net2, net3, sub) {
     return true;
 }
 
+function isValidLength(str, len, allowEmptyString) {
+    if (str == null || str.length === 0) {
+        return allowEmptyString === true;
+    }
+    console.log(str);
+    return str.length === len && isNumeric(str);
+}
+
+function sortPair(net) {
+    let a = parseInt(net.charAt(0));
+    let b = parseInt(net.charAt(1));
+    if (a < b) {
+        return net;
+    }
+    return ""+b+a;
+}
+
+
 function isNumeric(str) {
     return /^\d+$/.test(str);
 }
 
-function getAllMatchups(hash, order, matchUpSub) {
+// matchUpSub is who should sub in the matchup (can be empty)
+// badPairs are matchup teams to avoid
+function getAllMatchups(hash, order, matchUpSub, badPairs) {
     let matchups = {
         '123456': ['1234567','1234576','1234675','1235467','1235476','1235674','1236457','1236475','1236574','1237456','1237465','1237564','1245367','1245376','1245673','1246357','1246375','1246573','1324567','1324576','1324675','1325467','1325476','1325674','1326457','1326475','1326574','1327456','1327465','1327564','1345267','1345276','1345672','1346275','1346572','1423567','1423576','1423675','1425367','1425376','1425673','1426357','1426375','1426573','1427356','1427365','1427563','1435267','1435276','1435672','1436275','1436572','1437265','1437562','1523467','1523476','1523674','1524367','1524376','1524673','1526374','1526473','1527364','1527463','1534267','1534276','1534672','1536274','1536472','1537264','1537462','1546273','1546372','2314567','2314576','2314675','2315467','2315476','2315674','2316457','2316475','2316574','2317456','2317465','2317564','2345176','2345671','2346175','2346571','2413567','2413576','2413675','2415367','2415376','2415673','2416357','2416375','2416573','2417356','2417365','2417563','2435176','2435671','2436175','2436571','2437561'],
         '123457': ['1234567','1234576','1234675','1235467','1235476','1235674','1236457','1236475','1236574','1237456','1237465','1237564','1245367','1245376','1245673','1246375','1246573','1324567','1324576','1324675','1325467','1325476','1325674','1326457','1326475','1326574','1327456','1327465','1327564','1345276','1345672','1346275','1346572','1423567','1423576','1423675','1425367','1425376','1425673','1426375','1426573','1427365','1427563','1435276','1435672','1436275','1436572','1437562','1523467','1523476','1523674','1524367','1524376','1524673','1526374','1526473','1527364','1527463','1534276','1534672','1536274','1536472','1537462','1546273','1546372','2314567','2314576','2314675','2315467','2315476','2315674','2316457','2316475','2316574','2317456','2317465','2317564','2345671','2346571','2413567','2413576','2413675','2415367','2415376','2415673','2416375','2416573','2417365','2417563','2435671','2436571','2437561'],
@@ -191,11 +220,15 @@ function getAllMatchups(hash, order, matchUpSub) {
         let net3 = matchup.substring(4, 6);
         let nets = [net1, net2, net3];
         let newOrder = [];
+        let bad = false;
         for (let idx in nets) {
+            if (badPairs.includes(nets[idx])) {
+                bad = true;
+            }
             newOrder[order[idx]] = nets[idx];
         }
         let sub = matchup.substring(6);
-        if (matchUpSub.length === 0 || (matchUpSub.length === 1 && sub === matchUpSub)) {
+        if (!bad && (matchUpSub.length === 0 || (matchUpSub.length === 1 && sub === matchUpSub))) {
             sorted.push(newOrder[0] + ", " + newOrder[1] + ", " + newOrder[2] + "; Sub: " + sub);
         }
     }
