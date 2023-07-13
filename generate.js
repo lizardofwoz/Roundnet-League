@@ -7,8 +7,9 @@ function go() {
     let prev3 = document.getElementById("prev3").value;
     let matchUpSub = document.getElementById("sub").value;
     document.getElementById("results").innerHTML = "";
+    document.getElementById("error-text").innerHTML = "";
     if (!isValid(net1, net2, net3, prev1, prev2, prev3, matchUpSub)) {
-        console.log("Error");
+        document.getElementById("error-text").innerHTML = "Error";
         return;
     }
     let [hash, order] = getHashAndOrder(net1, net2, net3);
