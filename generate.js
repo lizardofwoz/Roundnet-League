@@ -6,9 +6,10 @@ function go() {
     let prev2 = document.getElementById("prev2").value;
     let prev3 = document.getElementById("prev3").value;
     let matchUpSub = document.getElementById("sub").value;
+    let required = document.getElementById("required").value;
     document.getElementById("results").innerHTML = "";
     document.getElementById("error-text").innerHTML = "";
-    if (!isValid(net1, net2, net3, prev1, prev2, prev3, matchUpSub)) {
+    if (!isValid(net1, net2, net3, prev1, prev2, prev3, matchUpSub, required)) {
         document.getElementById("error-text").innerHTML = "Error";
         return;
     }
@@ -25,7 +26,7 @@ function go() {
     if (prev3.length === 2) {
         badPairs.push(sortPair(prev3));
     }
-    let res = getAllMatchups(hash, order, matchUpSub, badPairs);
+    let res = getAllMatchups(hash, order, matchUpSub, badPairs, sortPair(required));
     for (r of res) {
         let node = document.createElement("li");
         let text = document.createTextNode(r);
@@ -50,11 +51,11 @@ function getHashAndOrder(net1, net2, net3) {
     return [hash, order];
 }
 
-function isValid(net1, net2, net3, prev1, prev2, prev3, sub) {
+function isValid(net1, net2, net3, prev1, prev2, prev3, sub, required) {
     if (!isValidLength(net1, 2) || !isValidLength(net2, 2) || !isValidLength(net3, 2)) {
         return false;
     }
-    if (!isValidLength(prev1, 2, true) || !isValidLength(prev2, 2, true) || !isValidLength(prev3, 2, true)) {
+    if (!isValidLength(prev1, 2, true) || !isValidLength(prev2, 2, true) || !isValidLength(prev3, 2, true) || !isValidLength(required, 2, true)) {
         return false;
     }
     if (!isValidLength(sub, 1, true)) {
@@ -88,6 +89,9 @@ function isValidLength(str, len, allowEmptyString) {
 }
 
 function sortPair(net) {
+    if (net.length === 0) {
+        return net;
+    }
     let a = parseInt(net.charAt(0));
     let b = parseInt(net.charAt(1));
     if (a < b) {
@@ -103,7 +107,8 @@ function isNumeric(str) {
 
 // matchUpSub is who should sub in the matchup (can be empty)
 // badPairs are matchup teams to avoid
-function getAllMatchups(hash, order, matchUpSub, badPairs) {
+// required is a required matchup pair
+function getAllMatchups(hash, order, matchUpSub, badPairs, required) {
     let matchups = {
         '123456': ['1234567','1234576','1234675','1235467','1235476','1235674','1236457','1236475','1236574','1237456','1237465','1237564','1245367','1245376','1245673','1246357','1246375','1246573','1324567','1324576','1324675','1325467','1325476','1325674','1326457','1326475','1326574','1327456','1327465','1327564','1345267','1345276','1345672','1346275','1346572','1423567','1423576','1423675','1425367','1425376','1425673','1426357','1426375','1426573','1427356','1427365','1427563','1435267','1435276','1435672','1436275','1436572','1437265','1437562','1523467','1523476','1523674','1524367','1524376','1524673','1526374','1526473','1527364','1527463','1534267','1534276','1534672','1536274','1536472','1537264','1537462','1546273','1546372','2314567','2314576','2314675','2315467','2315476','2315674','2316457','2316475','2316574','2317456','2317465','2317564','2345176','2345671','2346175','2346571','2413567','2413576','2413675','2415367','2415376','2415673','2416357','2416375','2416573','2417356','2417365','2417563','2435176','2435671','2436175','2436571','2437561'],
         '123457': ['1234567','1234576','1234675','1235467','1235476','1235674','1236457','1236475','1236574','1237456','1237465','1237564','1245367','1245376','1245673','1246375','1246573','1324567','1324576','1324675','1325467','1325476','1325674','1326457','1326475','1326574','1327456','1327465','1327564','1345276','1345672','1346275','1346572','1423567','1423576','1423675','1425367','1425376','1425673','1426375','1426573','1427365','1427563','1435276','1435672','1436275','1436572','1437562','1523467','1523476','1523674','1524367','1524376','1524673','1526374','1526473','1527364','1527463','1534276','1534672','1536274','1536472','1537462','1546273','1546372','2314567','2314576','2314675','2315467','2315476','2315674','2316457','2316475','2316574','2317456','2317465','2317564','2345671','2346571','2413567','2413576','2413675','2415367','2415376','2415673','2416375','2416573','2417365','2417563','2435671','2436571','2437561'],
@@ -229,7 +234,10 @@ function getAllMatchups(hash, order, matchUpSub, badPairs) {
             newOrder[order[idx]] = nets[idx];
         }
         let sub = matchup.substring(6);
-        if (!bad && (matchUpSub.length === 0 || (matchUpSub.length === 1 && sub === matchUpSub))) {
+        // Check conditions
+        let subOk = matchUpSub.length === 0 || (matchUpSub.length === 1 && sub === matchUpSub);
+        let requiredOk = required.length === 0 || nets.includes(required);
+        if (!bad && subOk && requiredOk) {
             sorted.push(newOrder[0] + ", " + newOrder[1] + ", " + newOrder[2] + "; Sub: " + sub);
         }
     }
